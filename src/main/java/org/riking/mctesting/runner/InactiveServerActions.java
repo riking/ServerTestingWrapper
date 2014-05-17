@@ -6,10 +6,13 @@ import java.io.File;
 
 public class InactiveServerActions extends AbstractActions {
     private static InactiveServerActions ourInstance = new InactiveServerActions();
+
     public static InactiveServerActions getInstance() {
         return ourInstance;
     }
-    private InactiveServerActions() { }
+
+    private InactiveServerActions() {
+    }
 
     @Override
     public ActionResult doAction(Tester tester, String[] args) throws Exception {

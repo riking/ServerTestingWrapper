@@ -7,17 +7,22 @@ import java.io.Writer;
 public class NullOutputStream extends OutputStream {
 
     @Override
-    public void write(int i) { }
+    public void write(int i) {
+    }
 
     @Override
-    public void write(byte[] b) { }
+    public void write(byte[] b) {
+    }
 
     @Override
-    public void write(byte[] b, int off, int len) { }
+    public void write(byte[] b, int off, int len) {
+    }
 
     @Override
-    public void flush() { }
+    public void flush() {
+    }
 
     @Override
-    public void close() { }
+    public void close() {
+    }
 }

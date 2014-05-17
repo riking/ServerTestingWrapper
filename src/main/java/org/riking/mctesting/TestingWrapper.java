@@ -17,14 +17,14 @@ public class TestingWrapper {
     // 50 equals signs
     public static final String SEPARATOR = "==================================================";
 
-	public static void main(String[] args) {
-		OptionParser parser = new OptionParser() {
-			{
-				acceptsAll(asList("?", "h", "help"), "Show the help");
+    public static void main(String[] args) {
+        OptionParser parser = new OptionParser() {
+            {
+                acceptsAll(asList("?", "h", "help"), "Show the help");
 
-				acceptsAll(asList("m", "memory"), "Memory to allocate (-Xmx)")
-					.withRequiredArg()
-					.defaultsTo("2G");
+                acceptsAll(asList("m", "memory"), "Memory to allocate (-Xmx)")
+                        .withRequiredArg()
+                        .defaultsTo("2G");
 
                 acceptsAll(asList("v", "verbose"), "Verbose output");
 
@@ -37,27 +37,27 @@ public class TestingWrapper {
                         .ofType(String.class)
                         .defaultsTo("craftbukkit.jar");
 
-				nonOptions("Test script files").ofType(String.class);
-			}
-		};
+                nonOptions("Test script files").ofType(String.class);
+            }
+        };
 
-		OptionSet options = null;
+        OptionSet options = null;
 
-		try {
-			options = parser.parse(args);
-		} catch (joptsimple.OptionException ex) {
+        try {
+            options = parser.parse(args);
+        } catch (joptsimple.OptionException ex) {
             System.err.println("Error: " + ex.getMessage());
             System.exit(3);
-		}
+        }
 
-		if ((options == null) || (options.has("?"))) {
-			try {
-				parser.printHelpOn(System.out);
-			} catch (IOException ex) {
+        if ((options == null) || (options.has("?"))) {
+            try {
+                parser.printHelpOn(System.out);
+            } catch (IOException ex) {
                 ex.printStackTrace();
-			}
+            }
             System.exit(3);
-		}
+        }
 
         // Pre-flight options parsing
 
@@ -76,19 +76,19 @@ public class TestingWrapper {
 
         List<TestResult> results = new ArrayList<TestResult>();
 
-		for (Object o : options.nonOptionArguments()) {
-			String inputFile = (String) o;
-			File testFile = new File(inputFile);
-			if (!testFile.exists()) {
-				System.out.println("File " + inputFile + " does not exist!");
-				results.add(new TestResult("Testing file does not exist", inputFile));
+        for (Object o : options.nonOptionArguments()) {
+            String inputFile = (String) o;
+            File testFile = new File(inputFile);
+            if (!testFile.exists()) {
+                System.out.println("File " + inputFile + " does not exist!");
+                results.add(new TestResult("Testing file does not exist", inputFile));
                 continue;
-			}
+            }
 
             System.out.println("[" + testFile.getName() + "] STARTING TEST");
             results.add(new Tester(options, inputFile, testFile).runTest());
             System.out.println("[" + testFile.getName() + "] TEST COMPLETE");
-		}
+        }
 
         System.out.println(SEPARATOR);
         int tests = 0, failures = 0, errors = 0;
@@ -101,14 +101,17 @@ public class TestingWrapper {
                     System.out.print('.');
                     break;
                 case FAILURE:
-                    tests++; failures++;
+                    tests++;
+                    failures++;
                     System.out.print('F');
 
                     buffer.append("[F] Test ").append(result.getTestName()).append(" failed:").append('\n');
                     buffer.append("     ").append(result.getFailure()).append('\n');
                     break;
                 case ERROR:
-                    tests++; failures++; errors++;
+                    tests++;
+                    failures++;
+                    errors++;
                     System.out.print('E');
 
                     buffer.append("[E] Test ").append(result.getTestName()).append(" errored:").append('\n');
@@ -145,9 +148,9 @@ public class TestingWrapper {
             System.err.println(tests + " tests run, " + failures + " tests failed, " + errors + " tests with errors.");
             System.exit(2);
         }
-	}
+    }
 
-	private static List<String> asList(String... params) {
-		return Arrays.asList(params);
-	}
+    private static List<String> asList(String... params) {
+        return Arrays.asList(params);
+    }
 }

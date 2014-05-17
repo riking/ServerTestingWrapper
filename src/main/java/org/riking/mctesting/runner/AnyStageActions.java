@@ -3,10 +3,13 @@ package org.riking.mctesting.runner;
 public class AnyStageActions extends AbstractActions {
 
     private static AnyStageActions ourInstance = new AnyStageActions();
+
     public static AnyStageActions getInstance() {
         return ourInstance;
     }
-    private AnyStageActions() { }
+
+    private AnyStageActions() {
+    }
 
     @Override
     public ActionResult doAction(Tester tester, String[] args) throws Exception {
