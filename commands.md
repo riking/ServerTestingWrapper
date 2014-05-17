@@ -16,7 +16,7 @@ During server start:
 
 After server start:
 
-- O output - expect the given (decolorized) output (The [HH:MM:SS INFO] is skipped.)
+ - O output - expect the given (decolorized) output (The [HH:MM:SS INFO] is skipped.)
  - O* regex - expect output matching the given regex (The [HH:MM:SS INFO] is skipped.)
  - OSkip - Skip lines until the next O line is matched, or until the command completes if no O lines are provided.
  - Command command - Run a command in the server console. O lines should follow this, unless the command makes no output.
