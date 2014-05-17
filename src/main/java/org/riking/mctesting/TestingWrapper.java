@@ -2,15 +2,15 @@ package org.riking.mctesting;
 
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
+import org.codehaus.plexus.util.ExceptionUtils;
+import org.riking.mctesting.runner.Tester;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class TestingWrapper {
 
@@ -25,6 +25,8 @@ public class TestingWrapper {
 				acceptsAll(asList("m", "memory"), "Memory to allocate (-Xmx)")
 					.withRequiredArg()
 					.defaultsTo("2G");
+
+                acceptsAll(asList("v", "verbose"), "Verbose output");
 
                 acceptsAll(asList("q", "quiet"), "Only output test counts, not the failure details");
 
@@ -57,11 +59,20 @@ public class TestingWrapper {
             System.exit(3);
 		}
 
-        // Pre-flight options check
+        // Pre-flight options parsing
+
         String jarfile = (String) options.valueOf("j");
         if (!new File(jarfile).exists()) {
             System.err.println("Server jar " + jarfile + " not found!");
+            System.exit(3);
         }
+
+        if (options.has("q")) {
+            // System.err only
+            System.setOut(new PrintStream(new NullOutputStream()));
+        }
+
+        // Start testing
 
         List<TestResult> results = new ArrayList<TestResult>();
 
@@ -79,31 +90,40 @@ public class TestingWrapper {
 
         System.out.println(SEPARATOR);
         int tests = 0, failures = 0, errors = 0;
+        StringBuilder buffer = new StringBuilder();
 
         for (TestResult result : results) {
             switch (result.getType()) {
                 case SUCCESS:
                     tests++;
+                    System.out.print('.');
                     break;
                 case FAILURE:
                     tests++; failures++;
-                    System.out.println("[F] Test " + result.getTestName() + " failed:");
-                    System.out.println("     " + result.getFailure());
+                    System.out.print('F');
+
+                    buffer.append("[F] Test ").append(result.getTestName()).append(" failed:").append('\n');
+                    buffer.append("     ").append(result.getFailure()).append('\n');
                     break;
                 case ERROR:
                     tests++; failures++; errors++;
-                    System.out.println("[E] Test " + result.getTestName() + " errored:");
+                    System.out.print('E');
+
+                    buffer.append("[E] Test ").append(result.getTestName()).append(" errored:").append('\n');
                     if (options.has("t")) {
-                        //noinspection ThrowableResultOfMethodCallIgnored
-                        result.getException().printStackTrace();
+                        buffer.append(ExceptionUtils.getStackTrace(result.getException())).append('\n');
                     } else {
                         //noinspection ThrowableResultOfMethodCallIgnored
-                        System.out.println("     " + result.getException().getClass().getName() + ": " + result.getException().getMessage());
+                        buffer.append("     ")
+                                .append(result.getException().getClass().getName())
+                                .append(": ")
+                                .append(result.getException().getMessage());
                     }
             }
         }
+        System.out.print("\n\n");
 
-        System.out.println(SEPARATOR);
+        System.out.println(buffer.toString());
 
         if (failures == 0) {
             System.out.println("Ran " + tests + " tests, no failures.");

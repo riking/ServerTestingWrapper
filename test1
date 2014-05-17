@@ -1,0 +1,15 @@
+Properties level-type: FLAT
+Properties level-seed: 123456
+Properties online-mode: false
+DeleteWorld
+Start
+WaitForStart
+Command autoref load directfire
+O Please wait...
+O Loading map: directfire
+SkipLines
+O* \[AutoReferee\] Setting up scoreboard for .*
+O* \[AutoReferee\] Setting up scoreboard for .*
+O* Preparing start region for level 3 .*
+O* \[AutoReferee\] CONSOLE loaded .*
+Stop
