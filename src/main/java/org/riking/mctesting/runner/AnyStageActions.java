@@ -1,17 +1,12 @@
 package org.riking.mctesting.runner;
 
-public class AnyStageActions implements ActionHandler {
+public class AnyStageActions extends AbstractActions {
 
     private static AnyStageActions ourInstance = new AnyStageActions();
     public static AnyStageActions getInstance() {
         return ourInstance;
     }
     private AnyStageActions() { }
-
-    @Override
-    public String getPhaseName() {
-        return null;
-    }
 
     @Override
     public ActionResult doAction(Tester tester, String[] args) throws Exception {

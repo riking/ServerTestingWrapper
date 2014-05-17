@@ -4,17 +4,12 @@ import org.codehaus.plexus.util.FileUtils;
 
 import java.io.File;
 
-public class InactiveServerActions implements ActionHandler {
+public class InactiveServerActions extends AbstractActions {
     private static InactiveServerActions ourInstance = new InactiveServerActions();
     public static InactiveServerActions getInstance() {
         return ourInstance;
     }
     private InactiveServerActions() { }
-
-    @Override
-    public String getPhaseName() {
-        return null;
-    }
 
     @Override
     public ActionResult doAction(Tester tester, String[] args) throws Exception {

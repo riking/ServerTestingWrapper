@@ -40,7 +40,6 @@ public class Tester {
 
         Process process = null;
         try {
-            System.out.println("[" + name + "] STARTING TEST");
             verbose("Entering pre-server stage...");
             runPhase(new StageBeforeServer());
 
@@ -78,18 +77,22 @@ public class Tester {
             }
 
             verbose("Stopping server...");
-            runPhase(new StageServerShutdown());
+            try {
+                runPhase(new StageServerShutdown());
+            } catch (Throwable t) {
+                // Don't exit right away - need to stop the server
+                result = new TestResult(t, name);
+            }
 
             process.waitFor();
             writerIn.close();
             process = null;
             writerIn = null;
 
+            if (result != null) return result;
+
             runPhase(new StagePostShutdown());
 
-            readerOut.close();
-
-            System.out.println("[" + name + "] TEST COMPLETE");
             return new TestResult(name);
         } catch (Throwable t) {
             System.out.println("Test errored - " + t.getMessage());

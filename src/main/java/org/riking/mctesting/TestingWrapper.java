@@ -85,7 +85,9 @@ public class TestingWrapper {
                 continue;
 			}
 
+            System.out.println("[" + testFile.getName() + "] STARTING TEST");
             results.add(new Tester(options, inputFile, testFile).runTest());
+            System.out.println("[" + testFile.getName() + "] TEST COMPLETE");
 		}
 
         System.out.println(SEPARATOR);
