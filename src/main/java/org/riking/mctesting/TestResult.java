@@ -15,12 +15,12 @@ public class TestResult {
         this(Type.SUCCESS, name);
     }
 
-    public TestResult(String message, String name) {
+    public TestResult(String name, String message) {
         this(Type.FAILURE, name);
         this.description = message;
     }
 
-    public TestResult(Throwable throwable, String name) {
+    public TestResult(String name, Throwable throwable) {
         this(Type.ERROR, name);
         this.throwable = throwable;
 

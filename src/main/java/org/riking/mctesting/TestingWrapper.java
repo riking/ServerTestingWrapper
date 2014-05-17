@@ -81,7 +81,7 @@ public class TestingWrapper {
             File testFile = new File(inputFile);
             if (!testFile.exists()) {
                 System.out.println("File " + inputFile + " does not exist!");
-                results.add(new TestResult("Testing file does not exist", inputFile));
+                results.add(new TestResult(inputFile, "Testing file does not exist"));
                 continue;
             }
 

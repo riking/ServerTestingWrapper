@@ -26,7 +26,7 @@ public class Tester {
         try {
             reader = new BufferedReader(new FileReader(inputFile));
         } catch (Throwable t) {
-            result = new TestResult(t, name);
+            result = new TestResult(name, t);
         }
     }
 
@@ -52,7 +52,7 @@ public class Tester {
                 runPhase(new StageServerStartup());
             } catch (Throwable t) {
                 // Don't exit right away - need to stop the server
-                result = new TestResult(t, name);
+                result = new TestResult(name, t);
             }
 
             if (result != null) {
@@ -66,7 +66,7 @@ public class Tester {
                 runPhase(new StageServerRunning());
             } catch (Throwable t) {
                 // Don't exit right away - need to stop the server
-                result = new TestResult(t, name);
+                result = new TestResult(name, t);
             }
 
             writeLine("stop");
@@ -81,7 +81,7 @@ public class Tester {
                 runPhase(new StageServerShutdown());
             } catch (Throwable t) {
                 // Don't exit right away - need to stop the server
-                result = new TestResult(t, name);
+                result = new TestResult(name, t);
             }
 
             process.waitFor();
@@ -96,7 +96,7 @@ public class Tester {
             return new TestResult(name);
         } catch (Throwable t) {
             System.out.println("Test errored - " + t.getMessage());
-            return new TestResult(t, name);
+            return new TestResult(name, t);
         } finally {
             if (process != null) {
                 if (writerIn != null) {
@@ -160,7 +160,8 @@ public class Tester {
         String line;
 
         if (handler.getPhaseName() == null) {
-            throw new IllegalArgumentException("Cannot run phase on a shared handler");
+            result = new TestResult(name, new IllegalArgumentException("Cannot run phase on a shared handler"));
+            return;
         }
 
         while ((line = reader.readLine()) != null) {
@@ -170,19 +171,26 @@ public class Tester {
                     .setTrimmerMatcher(StrMatcher.trimMatcher())
                     .getTokenArray();
 
+            ActionHandler.ActionResult actionResult;
             try {
-                ActionHandler.ActionResult actionResult = handler.doAction(this, args);
-                if (actionResult == ActionHandler.ActionResult.NEXT_STAGE) {
-                    // Done!
-                    return;
-                } else if (actionResult == ActionHandler.ActionResult.NOT_FOUND) {
-                    // Unrecognized commands starting with X- are ignored, otherwise, it's an error
-                    if (!args[0].startsWith("X-")) {
-                        throw new IllegalArgumentException("Command `" + args[0] + "` is not allowed in phase " + handler.getPhaseName());
-                    }
-                }
+                actionResult = handler.doAction(this, args);
             } catch (ArrayIndexOutOfBoundsException e) {
-                throw new IllegalArgumentException("Command `" + args[0] + "` requires more arguments", e);
+                result = new TestResult(name, new IllegalArgumentException("Command `" + args[0] + "` requires more arguments", e));
+                return;
+            } catch (Throwable t) {
+                result = new TestResult(name, t);
+                return;
+            }
+
+            if (actionResult == ActionHandler.ActionResult.NEXT_STAGE) {
+                // Done!
+                return;
+            } else if (actionResult == ActionHandler.ActionResult.NOT_FOUND) {
+                // Unrecognized commands starting with X- are ignored, otherwise, it's an error
+                if (!args[0].startsWith("X-")) {
+                    result = new TestResult(name, new IllegalArgumentException("Command `" + args[0] + "` is not allowed in phase " + handler.getPhaseName()));
+                    return;
+                }
             }
 
             if (result != null) {
@@ -194,7 +202,7 @@ public class Tester {
         }
 
         if (!handler.eofOkay()) {
-            throw new IllegalArgumentException("Unexpected end-of-file in phase " + handler.getPhaseName());
+            result = new TestResult(name, new IllegalArgumentException("Unexpected end-of-file in phase " + handler.getPhaseName()));
         }
     }
 
