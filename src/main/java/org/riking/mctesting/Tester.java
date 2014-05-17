@@ -22,7 +22,11 @@ public class Tester {
     private OutputStreamWriter inputWriter;
 
     public static final Pattern stopPattern = Pattern.compile("Stopping server");
-    public static final Pattern exceptionPattern = Pattern.compile("Exception");
+    public static final String exceptionPattern1 = ("[a-zA-Z0-9_.]+Exception");
+    public static final String exceptionPattern2 = ("\tat [a-zA-Z0-9_.]+\\(");
+    public static final String exceptionPatternCombined =
+            "(\\[..:..:.. WARN\\] )?" + "(" + exceptionPattern1 + "|" + exceptionPattern2 + ").*";
+    public static final Pattern exceptionPattern = Pattern.compile(exceptionPatternCombined);
 
     public Tester(OptionSet optionSet, String testName, File inputFile) {
         this.name = testName;
@@ -59,6 +63,7 @@ public class Tester {
                 result = new TestResult(name, t);
             }
 
+            System.out.println(result);
             if (result != null) {
                 stopServerEarly(process);
                 return result;
@@ -79,23 +84,14 @@ public class Tester {
 
             verbose("Stopping server...");
             writeLine("stop");
-            String line;
-            while ((line = getLine()) != null) {
-                if (stopPattern.matcher(line).matches()) {
-                    break;
-                } else {
-                    if (exceptionPattern.matcher(line).matches()) {
-                        result = fail(line);
-                        System.err.println("Dropped exception: " + line);
-                    } else {
-                        System.out.println("Dropped output: " + line);
-                    }
-                }
-            }
+
+            getMatchingLine(stopPattern);
+
             try {
                 Thread.sleep(150L);
             } catch (InterruptedException ignored) { }
-            verbose("wrote stop");
+
+            verbose("Server stopped.");
 
             try {
                 runPhase(new StageServerShutdown());
@@ -160,6 +156,11 @@ public class Tester {
         while ((line = getLine()) != null) {
             if (pattern.matcher(line).matches()) {
                 return line;
+            } else if (exceptionPattern.matcher(line).matches()) {
+                fail(line);
+                System.err.println("Dropped exception: " + line);
+            } else {
+                System.out.println(line);
             }
         }
 
@@ -258,5 +259,12 @@ public class Tester {
         if (optionSet.has("v")) {
             System.out.println(string);
         }
+    }
+
+    public final void fail(String message) {
+        if (result == null)
+            result = new TestResult(name, message);
+        else
+            result.addFailureLine(message);
     }
 }

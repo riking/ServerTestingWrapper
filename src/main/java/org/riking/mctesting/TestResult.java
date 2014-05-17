@@ -47,4 +47,8 @@ public class TestResult {
     public String getTestName() {
         return testName;
     }
+
+    public void addFailureLine(String line) {
+        description = description + "\n" + line;
+    }
 }

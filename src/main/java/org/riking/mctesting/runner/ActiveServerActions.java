@@ -33,6 +33,11 @@ public class ActiveServerActions extends AbstractActions {
             do {
                 line = tester.getLine();
                 matcher = messagePattern.matcher(line);
+
+                if (outputSkipAllowed && Tester.exceptionPattern.matcher(line).matches()) {
+                    fail(tester, line);
+                    System.err.println("Dropped exception: " + line);
+                }
             } while (!matcher.matches() && outputSkipAllowed);
 
             outputSkipAllowed = false;
