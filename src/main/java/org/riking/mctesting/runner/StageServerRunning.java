@@ -1,6 +1,7 @@
 package org.riking.mctesting.runner;
 
 import org.apache.commons.lang.StringUtils;
+import org.riking.mctesting.Tester;
 
 public class StageServerRunning extends AbstractStage {
 

@@ -3,7 +3,6 @@ package org.riking.mctesting;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import org.codehaus.plexus.util.ExceptionUtils;
-import org.riking.mctesting.runner.Tester;
 
 import java.io.File;
 import java.io.IOException;

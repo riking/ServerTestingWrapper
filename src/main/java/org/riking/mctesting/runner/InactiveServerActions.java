@@ -1,6 +1,7 @@
 package org.riking.mctesting.runner;
 
 import org.codehaus.plexus.util.FileUtils;
+import org.riking.mctesting.Tester;
 
 import java.io.File;
 

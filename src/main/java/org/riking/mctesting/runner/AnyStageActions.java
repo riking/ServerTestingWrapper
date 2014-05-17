@@ -1,5 +1,7 @@
 package org.riking.mctesting.runner;
 
+import org.riking.mctesting.Tester;
+
 public class AnyStageActions extends AbstractActions {
 
     private static AnyStageActions ourInstance = new AnyStageActions();

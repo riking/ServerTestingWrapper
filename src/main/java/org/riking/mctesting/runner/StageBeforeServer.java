@@ -1,5 +1,7 @@
 package org.riking.mctesting.runner;
 
+import org.riking.mctesting.Tester;
+
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.HashMap;
@@ -22,7 +24,6 @@ public class StageBeforeServer extends AbstractStage {
 
             return ActionResult.NORMAL;
         } else if ("Start".equals(command)) {
-
             // Process server.properties now
             java.util.Properties props = new java.util.Properties();
             props.load(new FileReader("server.properties"));

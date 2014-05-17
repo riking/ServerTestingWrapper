@@ -1,9 +1,10 @@
-package org.riking.mctesting.runner;
+package org.riking.mctesting;
 
 import joptsimple.OptionSet;
 import org.apache.commons.lang.text.StrMatcher;
 import org.apache.commons.lang.text.StrTokenizer;
 import org.riking.mctesting.TestResult;
+import org.riking.mctesting.runner.*;
 
 import java.io.*;
 import java.util.HashSet;
@@ -93,9 +94,11 @@ public class Tester {
 
             runPhase(new StagePostShutdown());
 
+            if (result != null) return result;
+
             return new TestResult(name);
         } catch (Throwable t) {
-            System.out.println("Test errored - " + t.getMessage());
+            System.out.println("Test error - " + t.getMessage());
             return new TestResult(name, t);
         } finally {
             if (process != null) {

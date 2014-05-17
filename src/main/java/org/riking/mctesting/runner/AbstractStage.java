@@ -1,5 +1,8 @@
 package org.riking.mctesting.runner;
 
+import org.riking.mctesting.TestResult;
+import org.riking.mctesting.Tester;
+
 public abstract class AbstractStage implements ActionHandler {
     private String name;
     private ActionHandler[] chainedHandlers;
@@ -7,6 +10,10 @@ public abstract class AbstractStage implements ActionHandler {
     public AbstractStage(String name, ActionHandler... chained) {
         this.name = name;
         this.chainedHandlers = chained;
+    }
+
+    protected final void fail(Tester tester, String message) {
+        tester.result = new TestResult(tester.name, message);
     }
 
     protected final ActionResult chain(Tester tester, String[] args) throws Exception {
