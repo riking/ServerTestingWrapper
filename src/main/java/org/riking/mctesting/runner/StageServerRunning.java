@@ -1,27 +1,23 @@
 package org.riking.mctesting.runner;
 
-public class StageServerRunning implements ActionHandler {
+import org.apache.commons.lang.StringUtils;
 
-    private static ActionHandler[] chainedHandlers = new ActionHandler[] {
-            AnyStageActions.getInstance(),
-            ActiveServerActions.getInstance(),
-    };
+public class StageServerRunning extends AbstractStage {
 
-    @Override
-    public String getPhaseName() {
-        return "running server";
+    public StageServerRunning() {
+        super("running server", AnyStageActions.getInstance(), ActiveServerActions.getInstance());
     }
 
     @Override
     public ActionResult doAction(Tester tester, String[] args) throws Exception {
         String command = args[0];
 
-        for (ActionHandler handler : chainedHandlers) {
-            if (handler.doAction(tester, args) != ActionResult.NOT_FOUND) {
-                return ActionResult.NORMAL;
-            }
+        if ("Command".equals(command)) {
+            tester.writeLine(StringUtils.join(args, ' ', 1, args.length));
+
+            return ActionResult.NORMAL;
         }
 
-        return ActionResult.NOT_FOUND;
+        return chain(tester, args);
     }
 }

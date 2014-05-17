@@ -9,6 +9,13 @@ public interface ActionHandler {
      */
     public String getPhaseName();
 
+    /**
+     * Check whether end-of-file is acceptable at this stage.
+     *
+     * @return true if EOF is okay
+     */
+    public boolean eofOkay();
+
     public ActionResult doAction(Tester tester, String[] args) throws Exception;
 
     public enum ActionResult {

@@ -5,19 +5,13 @@ import java.io.FileWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-public class StageBeforeServer implements ActionHandler {
+public class StageBeforeServer extends AbstractStage {
 
-    private static ActionHandler[] chainedHandlers = new ActionHandler[] {
-            AnyStageActions.getInstance(),
-            InactiveServerActions.getInstance(),
-    };
+    public StageBeforeServer() {
+        super("before server", AnyStageActions.getInstance(), InactiveServerActions.getInstance());
+    }
 
     private Map<String, String> properties = new HashMap<String, String>();
-
-    @Override
-    public String getPhaseName() {
-        return "pre-server";
-    }
 
     @Override
     public ActionResult doAction(Tester tester, String[] args) throws Exception {
@@ -28,8 +22,8 @@ public class StageBeforeServer implements ActionHandler {
 
             return ActionResult.NORMAL;
         } else if ("Start".equals(command)) {
-            // Process server.properties now
 
+            // Process server.properties now
             java.util.Properties props = new java.util.Properties();
             props.load(new FileReader("server.properties"));
             props.putAll(properties);
@@ -38,12 +32,6 @@ public class StageBeforeServer implements ActionHandler {
             return ActionResult.NEXT_STAGE;
         }
 
-        for (ActionHandler handler : chainedHandlers) {
-            if (handler.doAction(tester, args) != ActionResult.NOT_FOUND) {
-                return ActionResult.NORMAL;
-            }
-        }
-
-        return ActionResult.NOT_FOUND;
+        return chain(tester, args);
     }
 }

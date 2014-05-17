@@ -30,8 +30,6 @@ public class Tester {
         }
     }
 
-    private boolean fileEmpty = true;
-
     /**
      * Run the test. This method catches all errors.
      *
@@ -50,11 +48,45 @@ public class Tester {
 
             verbose("Starting server...");
             process = startServer();
-            runPhase(StageServerStartup.getInstance());
+
+            try {
+                runPhase(new StageServerStartup());
+            } catch (Throwable t) {
+                // Don't exit right away - need to stop the server
+                result = new TestResult(t, name);
+            }
+
+            if (result != null) {
+                writeLine("stop");
+                process.waitFor();
+                return result;
+            }
+
+            verbose("Server is running. Running tests...");
+            try {
+                runPhase(new StageServerRunning());
+            } catch (Throwable t) {
+                // Don't exit right away - need to stop the server
+                result = new TestResult(t, name);
+            }
 
             writeLine("stop");
+
+            if (result != null) {
+                process.waitFor();
+                return result;
+            }
+
+            verbose("Stopping server...");
+            runPhase(new StageServerShutdown());
+
             process.waitFor();
             writerIn.close();
+            process = null;
+            writerIn = null;
+
+            runPhase(new StagePostShutdown());
+
             readerOut.close();
 
             System.out.println("[" + name + "] TEST COMPLETE");
@@ -150,12 +182,17 @@ public class Tester {
                 throw new IllegalArgumentException("Command `" + args[0] + "` requires more arguments", e);
             }
 
-            if (result != null) return;
+            if (result != null) {
+                verbose("Command failed: " + line);
+                return;
+            }
 
             verbose("Command successful: " + line);
         }
 
-        throw new IllegalArgumentException("Unexpected end-of-file in phase " + handler.getPhaseName());
+        if (!handler.eofOkay()) {
+            throw new IllegalArgumentException("Unexpected end-of-file in phase " + handler.getPhaseName());
+        }
     }
 
     public void verbose(String string) {
