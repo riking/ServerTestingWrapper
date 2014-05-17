@@ -5,9 +5,7 @@ import org.apache.commons.lang.text.StrMatcher;
 import org.apache.commons.lang.text.StrTokenizer;
 import org.riking.mctesting.TestResult;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,6 +16,9 @@ public class Tester {
 
     private final OptionSet optionSet;
     private BufferedReader reader;
+
+    private BufferedReader readerOut;
+    private OutputStreamWriter writerIn;
 
     public Tester(OptionSet optionSet, String testName, File inputFile) {
         this.name = testName;
@@ -39,19 +40,80 @@ public class Tester {
     public TestResult runTest() {
         if (result != null) return result;
 
+        Process process = null;
         try {
+            System.out.println("[" + name + "] STARTING TEST");
             verbose("Entering pre-server stage...");
-            runPhase(new PreServerActions());
+            runPhase(new StageBeforeServer());
 
             if (result != null) return result;
 
             verbose("Starting server...");
+            process = startServer();
+            runPhase(StageServerStartup.getInstance());
 
+            writeLine("stop");
+            process.waitFor();
+            writerIn.close();
+            readerOut.close();
+
+            System.out.println("[" + name + "] TEST COMPLETE");
             return new TestResult(name);
         } catch (Throwable t) {
-            System.out.println("Catching");
+            System.out.println("Test errored - " + t.getMessage());
             return new TestResult(t, name);
+        } finally {
+            if (process != null) {
+                if (writerIn != null) {
+                    try {
+                        writeLine("stop");
+                    } catch (IOException ignored) {
+                    }
+                }
+                boolean interrupted = Thread.interrupted();
+                try {
+                    process.waitFor();
+                } catch (InterruptedException e) {
+                    interrupted = true;
+                    process.destroy();
+                }
+                if (interrupted) Thread.currentThread().interrupt();
+            }
         }
+    }
+
+    public void writeLine(String line) throws IOException {
+        writerIn.write(line);
+        writerIn.flush();
+    }
+
+    public String getLine() throws IOException {
+        return readerOut.readLine();
+    }
+
+    private Process startServer() {
+        ProcessBuilder builder = new ProcessBuilder(
+                "java",
+                "-Xmx" + optionSet.valueOf("memory"),
+                "-XX:MaxPermSize=128M",
+                "-jar",
+                (String) optionSet.valueOf("jar"),
+                "-nojline"
+        );
+
+        builder.redirectErrorStream();
+
+        Process process;
+        try {
+            process = builder.start();
+            OutputStream stdIn = process.getOutputStream();
+            InputStream stdOut = process.getInputStream();
+            readerOut = new BufferedReader(new InputStreamReader(stdOut));
+            writerIn = new OutputStreamWriter(stdIn);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to start server: " + e.getMessage(), e);
+        }
+        return process;
     }
 
     /**
@@ -79,7 +141,10 @@ public class Tester {
                     // Done!
                     return;
                 } else if (actionResult == ActionHandler.ActionResult.NOT_FOUND) {
-                    throw new IllegalArgumentException("Command `" + args[0] + "` is not allowed in phase " + handler.getPhaseName());
+                    // Unrecognized commands starting with X- are ignored, otherwise, it's an error
+                    if (!args[0].startsWith("X-")) {
+                        throw new IllegalArgumentException("Command `" + args[0] + "` is not allowed in phase " + handler.getPhaseName());
+                    }
                 }
             } catch (ArrayIndexOutOfBoundsException e) {
                 throw new IllegalArgumentException("Command `" + args[0] + "` requires more arguments", e);

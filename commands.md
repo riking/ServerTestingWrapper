@@ -2,11 +2,8 @@ Before server start:
 
  - `Properties key value` - set a value in server.properties
  - `DeleteWorlds` - Delete the 'world', 'world\_nether', and 'world\_the\_end' folders
- - `DeleteAllWorlds` - Delete all worlds, even those not having standard names
  - `DeleteFile filename` - delete the named file
- - `DeleteFileMatch regex` - delete files matching the provided glob 
  - `DeleteFolder folder` - delete the named folder
- - `DeleteFolderMatch regex` - delete folders matching the provided glob
  - `Copy source destination` - copy a file
  - `CopyFolder source destination` - copy a folder
  - `Start` - starts the server

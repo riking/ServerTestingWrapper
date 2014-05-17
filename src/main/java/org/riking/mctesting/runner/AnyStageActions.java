@@ -9,6 +9,11 @@ public class AnyStageActions implements ActionHandler {
     private AnyStageActions() { }
 
     @Override
+    public String getPhaseName() {
+        return null;
+    }
+
+    @Override
     public ActionResult doAction(Tester tester, String[] args) throws Exception {
         String command = args[0];
 
@@ -21,10 +26,5 @@ public class AnyStageActions implements ActionHandler {
         }
 
         return ActionResult.NOT_FOUND;
-    }
-
-    @Override
-    public String getPhaseName() {
-        return null;
     }
 }

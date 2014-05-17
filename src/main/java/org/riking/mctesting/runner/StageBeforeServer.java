@@ -1,29 +1,22 @@
 package org.riking.mctesting.runner;
 
-import org.codehaus.plexus.util.FileUtils;
-
-import javax.swing.*;
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-public class PreServerActions implements ActionHandler {
+public class StageBeforeServer implements ActionHandler {
 
     private static ActionHandler[] chainedHandlers = new ActionHandler[] {
-            AnyStageActions.getInstance()
+            AnyStageActions.getInstance(),
+            InactiveServerActions.getInstance(),
     };
 
     private Map<String, String> properties = new HashMap<String, String>();
 
-    public PreServerActions() { }
-
     @Override
     public String getPhaseName() {
-        return "Pre-server";
+        return "pre-server";
     }
 
     @Override
@@ -32,26 +25,6 @@ public class PreServerActions implements ActionHandler {
 
         if ("Properties".equals(command)) {
             properties.put(args[1], args[2]);
-
-            return ActionResult.NORMAL;
-        } else if ("DeleteWorlds".equals(command)) {
-            FileUtils.deleteDirectory(new File("world"));
-            FileUtils.deleteDirectory(new File("world_nether"));
-            FileUtils.deleteDirectory(new File("world_the_end"));
-
-            tester.verbose("Deleted world, nether, end");
-
-            File[] directories = new File(".").listFiles();
-            if (directories != null) {
-                for (File file : directories) {
-                    if (!file.isDirectory()) continue;
-
-                    if (new File(file, "level.dat").exists()) {
-                        FileUtils.deleteDirectory(file);
-                        tester.verbose("Deleted " + file.getName());
-                    }
-                }
-            }
 
             return ActionResult.NORMAL;
         } else if ("Start".equals(command)) {
@@ -70,8 +43,6 @@ public class PreServerActions implements ActionHandler {
                 return ActionResult.NORMAL;
             }
         }
-
-        System.out.println("Not found");
 
         return ActionResult.NOT_FOUND;
     }
