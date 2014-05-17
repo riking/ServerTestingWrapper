@@ -57,8 +57,7 @@ public class Tester {
             }
 
             if (result != null) {
-                writeLine("stop");
-                process.waitFor();
+                stopServerEarly(process);
                 return result;
             }
 
@@ -70,14 +69,14 @@ public class Tester {
                 result = new TestResult(name, t);
             }
 
-            writeLine("stop");
-
             if (result != null) {
-                process.waitFor();
+                stopServerEarly(process);
                 return result;
             }
 
             verbose("Stopping server...");
+            writeLine("stop");
+
             try {
                 runPhase(new StageServerShutdown());
             } catch (Throwable t) {
@@ -86,8 +85,8 @@ public class Tester {
             }
 
             process.waitFor();
-            writerIn.close();
             process = null;
+            writerIn.close();
             writerIn = null;
 
             if (result != null) return result;
@@ -152,6 +151,12 @@ public class Tester {
             throw new RuntimeException("Failed to start server: " + e.getMessage(), e);
         }
         return process;
+    }
+
+    private void stopServerEarly(Process process) throws Exception {
+        verbose("Stopping server...");
+        writeLine("stop");
+        process.waitFor();
     }
 
     /**
