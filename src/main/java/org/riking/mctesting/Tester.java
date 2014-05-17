@@ -3,12 +3,12 @@ package org.riking.mctesting;
 import joptsimple.OptionSet;
 import org.apache.commons.lang.text.StrMatcher;
 import org.apache.commons.lang.text.StrTokenizer;
-import org.riking.mctesting.TestResult;
 import org.riking.mctesting.runner.*;
 
 import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class Tester {
     public final String name;
@@ -16,16 +16,19 @@ public class Tester {
     public Set<String> ignoredExceptions = new HashSet<String>();
 
     private final OptionSet optionSet;
-    private BufferedReader reader;
+    private BufferedReader fileReader;
 
-    private BufferedReader readerOut;
-    private OutputStreamWriter writerIn;
+    private BufferedReader outputReader;
+    private OutputStreamWriter inputWriter;
+
+    public static final Pattern stopPattern = Pattern.compile("Stopping server");
+    public static final Pattern exceptionPattern = Pattern.compile("Exception");
 
     public Tester(OptionSet optionSet, String testName, File inputFile) {
         this.name = testName;
         this.optionSet = optionSet;
         try {
-            reader = new BufferedReader(new FileReader(inputFile));
+            fileReader = new BufferedReader(new FileReader(inputFile));
         } catch (Throwable t) {
             result = new TestResult(name, t);
         }
@@ -70,24 +73,43 @@ public class Tester {
             }
 
             if (result != null) {
-                stopServerEarly(process);
+                stopServerEarly(process); // !!! ENTERED
                 return result;
             }
 
             verbose("Stopping server...");
             writeLine("stop");
+            String line;
+            while ((line = getLine()) != null) {
+                if (stopPattern.matcher(line).matches()) {
+                    break;
+                } else {
+                    if (exceptionPattern.matcher(line).matches()) {
+                        result = fail(line);
+                        System.err.println("Dropped exception: " + line);
+                    } else {
+                        System.out.println("Dropped output: " + line);
+                    }
+                }
+            }
+            try {
+                Thread.sleep(150L);
+            } catch (InterruptedException ignored) { }
+            verbose("wrote stop");
 
             try {
                 runPhase(new StageServerShutdown());
+                getMatchingLine(stopPattern);
             } catch (Throwable t) {
                 // Don't exit right away - need to stop the server
                 result = new TestResult(name, t);
             }
 
+            getMatchingLine(stopPattern);
             process.waitFor();
             process = null;
-            writerIn.close();
-            writerIn = null;
+            inputWriter.close();
+            inputWriter = null;
 
             if (result != null) return result;
 
@@ -101,9 +123,11 @@ public class Tester {
             return new TestResult(name, t);
         } finally {
             if (process != null) {
-                if (writerIn != null) {
+                if (inputWriter != null) {
                     try {
                         writeLine("stop");
+                        verbose("in finally block");
+                        getMatchingLine(stopPattern);
                     } catch (IOException ignored) {
                     }
                 }
@@ -112,6 +136,7 @@ public class Tester {
                     process.waitFor();
                 } catch (InterruptedException e) {
                     interrupted = true;
+                    System.out.println("Killed server");
                     process.destroy();
                 }
                 if (interrupted) Thread.currentThread().interrupt();
@@ -120,12 +145,25 @@ public class Tester {
     }
 
     public void writeLine(String line) throws IOException {
-        writerIn.write(line);
-        writerIn.flush();
+        inputWriter.write(line + "\n");
+        inputWriter.flush();
+        verbose("Wrote " + line);
     }
 
     public String getLine() throws IOException {
-        return readerOut.readLine();
+        return outputReader.readLine();
+    }
+
+    public String getMatchingLine(Pattern pattern) throws IOException {
+        String line;
+
+        while ((line = getLine()) != null) {
+            if (pattern.matcher(line).matches()) {
+                return line;
+            }
+        }
+
+        return null;
     }
 
     private Process startServer() {
@@ -138,15 +176,13 @@ public class Tester {
                 "-nojline"
         );
 
-        builder.redirectErrorStream();
-
         Process process;
         try {
             process = builder.start();
             OutputStream stdIn = process.getOutputStream();
             InputStream stdOut = process.getInputStream();
-            readerOut = new BufferedReader(new InputStreamReader(stdOut));
-            writerIn = new OutputStreamWriter(stdIn);
+            outputReader = new BufferedReader(new InputStreamReader(stdOut));
+            inputWriter = new OutputStreamWriter(stdIn);
         } catch (IOException e) {
             throw new RuntimeException("Failed to start server: " + e.getMessage(), e);
         }
@@ -154,8 +190,11 @@ public class Tester {
     }
 
     private void stopServerEarly(Process process) throws Exception {
-        verbose("Stopping server...");
+        verbose("Stopping server early...");
         writeLine("stop");
+
+        verbose("Early wrote stop");
+        getMatchingLine(stopPattern);
         process.waitFor();
     }
 
@@ -172,16 +211,16 @@ public class Tester {
             return;
         }
 
-        while ((line = reader.readLine()) != null) {
+        while ((line = fileReader.readLine()) != null) {
             if (line.isEmpty()) continue;
 
-            String[] args = new StrTokenizer(line, StrMatcher.splitMatcher(), StrMatcher.quoteMatcher())
+            String[] args = new StrTokenizer(line, StrMatcher.splitMatcher())
                     .setTrimmerMatcher(StrMatcher.trimMatcher())
                     .getTokenArray();
 
             ActionHandler.ActionResult actionResult;
             try {
-                actionResult = handler.doAction(this, args);
+                actionResult = handler.doAction(this, args, line);
             } catch (ArrayIndexOutOfBoundsException e) {
                 result = new TestResult(name, new IllegalArgumentException("Command `" + args[0] + "` requires more arguments", e));
                 return;
@@ -192,6 +231,7 @@ public class Tester {
 
             if (actionResult == ActionHandler.ActionResult.NEXT_STAGE) {
                 // Done!
+                verbose("Command successful: " + line);
                 return;
             } else if (actionResult == ActionHandler.ActionResult.NOT_FOUND) {
                 // Unrecognized commands starting with X- are ignored, otherwise, it's an error

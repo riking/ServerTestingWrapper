@@ -18,7 +18,7 @@ public interface ActionHandler {
      */
     public boolean eofOkay();
 
-    public ActionResult doAction(Tester tester, String[] args) throws Exception;
+    public ActionResult doAction(Tester tester, String[] args, String fullLine) throws Exception;
 
     public enum ActionResult {
         /**

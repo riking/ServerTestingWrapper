@@ -14,9 +14,13 @@ public class StageServerShutdown extends AbstractStage {
     }
 
     @Override
-    public ActionResult doAction(Tester tester, String[] args) throws Exception {
+    public ActionResult doAction(Tester tester, String[] args, String fullLine) throws Exception {
         String command = args[0];
 
-        return chain(tester, args);
+        if ("WaitForStop".equals(command)) {
+            return ActionResult.NEXT_STAGE;
+        }
+
+        return chain(tester, args, fullLine);
     }
 }

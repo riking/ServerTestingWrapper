@@ -16,7 +16,7 @@ public class StageBeforeServer extends AbstractStage {
     private Map<String, String> properties = new HashMap<String, String>();
 
     @Override
-    public ActionResult doAction(Tester tester, String[] args) throws Exception {
+    public ActionResult doAction(Tester tester, String[] args, String fullLine) throws Exception {
         String command = args[0];
 
         if ("Properties".equals(command)) {
@@ -33,6 +33,6 @@ public class StageBeforeServer extends AbstractStage {
             return ActionResult.NEXT_STAGE;
         }
 
-        return chain(tester, args);
+        return chain(tester, args, fullLine);
     }
 }

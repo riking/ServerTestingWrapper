@@ -121,14 +121,14 @@ public class TestingWrapper {
                         buffer.append("     ")
                                 .append(result.getException().getClass().getName())
                                 .append(": ")
-                                .append(result.getException().getMessage());
+                                .append(result.getException().getMessage()).append('\n');
                         //noinspection ThrowableResultOfMethodCallIgnored
                         if (result.getException().getCause() != null) {
                             //noinspection ThrowableResultOfMethodCallIgnored
                             buffer.append("     Caused by: ")
                                     .append(result.getException().getClass().getName())
                                     .append(": ")
-                                    .append(result.getException().getMessage());
+                                    .append(result.getException().getMessage()).append('\n');
                         }
                     }
             }

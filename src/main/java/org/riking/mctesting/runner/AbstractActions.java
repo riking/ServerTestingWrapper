@@ -7,6 +7,7 @@ public abstract class AbstractActions implements ActionHandler {
 
     protected final void fail(Tester tester, String message) {
         tester.result = new TestResult(tester.name, message);
+        tester.verbose(message);
     }
 
     @Override

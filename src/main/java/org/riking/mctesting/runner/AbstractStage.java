@@ -16,9 +16,9 @@ public abstract class AbstractStage implements ActionHandler {
         tester.result = new TestResult(tester.name, message);
     }
 
-    protected final ActionResult chain(Tester tester, String[] args) throws Exception {
+    protected final ActionResult chain(Tester tester, String[] args, String fullLine) throws Exception {
         for (ActionHandler handler : chainedHandlers) {
-            if (handler.doAction(tester, args) != ActionResult.NOT_FOUND) {
+            if (handler.doAction(tester, args, fullLine) != ActionResult.NOT_FOUND) {
                 return ActionResult.NORMAL;
             }
         }

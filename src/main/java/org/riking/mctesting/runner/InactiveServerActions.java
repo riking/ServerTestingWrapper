@@ -16,7 +16,7 @@ public class InactiveServerActions extends AbstractActions {
     }
 
     @Override
-    public ActionResult doAction(Tester tester, String[] args) throws Exception {
+    public ActionResult doAction(Tester tester, String[] args, String fullLine) throws Exception {
         String command = args[0];
 
         if ("DeleteWorlds".equals(command)) {
