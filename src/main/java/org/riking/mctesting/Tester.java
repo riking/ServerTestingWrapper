@@ -18,6 +18,7 @@ public class Tester {
     private final OptionSet optionSet;
     private BufferedReader fileReader;
 
+    private InputStream rawInput;
     private BufferedReader outputReader;
     private OutputStreamWriter inputWriter;
 
@@ -150,6 +151,10 @@ public class Tester {
         return outputReader.readLine();
     }
 
+    public boolean hasLine() throws IOException {
+        return outputReader.ready();
+    }
+
     public String getMatchingLine(Pattern pattern) throws IOException {
         String line;
 
@@ -181,8 +186,8 @@ public class Tester {
         try {
             process = builder.start();
             OutputStream stdIn = process.getOutputStream();
-            InputStream stdOut = process.getInputStream();
-            outputReader = new BufferedReader(new InputStreamReader(stdOut));
+            rawInput = process.getInputStream();
+            outputReader = new BufferedReader(new InputStreamReader(rawInput));
             inputWriter = new OutputStreamWriter(stdIn);
         } catch (IOException e) {
             throw new RuntimeException("Failed to start server: " + e.getMessage(), e);
@@ -218,6 +223,9 @@ public class Tester {
             String[] args = new StrTokenizer(line, StrMatcher.splitMatcher())
                     .setTrimmerMatcher(StrMatcher.trimMatcher())
                     .getTokenArray();
+
+            // comment
+            if ("#".equals(args[0])) continue;
 
             ActionHandler.ActionResult actionResult;
             try {
